@@ -1,0 +1,13 @@
+# Target config for ~Day 5 (a small but real GPT). Not used yet.
+name: gpt_small
+batch_size: 64
+block_size: 256
+n_layer: 6
+n_head: 6
+n_embd: 384
+dropout: 0.2
+max_iters: 5000
+eval_interval: 500
+eval_iters: 200
+learning_rate: 0.0003
+seed: 1337

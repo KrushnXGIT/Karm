@@ -1,0 +1,13 @@
+# Core (Day 1+)
+torch>=2.2
+numpy
+
+# Config & utilities
+pyyaml
+tqdm
+
+# Testing
+pytest
+
+# Subword tokenization (Day 7+)
+tiktoken

@@ -1,0 +1,13 @@
+[project]
+name = "karm"
+version = "0.1.0"
+description = "Building an LLM from scratch, one phase at a time."
+requires-python = ">=3.10"
+dependencies = ["torch", "numpy", "pyyaml", "tqdm"]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
