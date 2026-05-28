@@ -2,8 +2,8 @@
 
 Build order (each class added + tested in isolation before wiring together):
   Day 2  Head               - single scaled dot-product self-attention head [DONE]
-  Day 3  MultiHeadAttention - parallel heads + projection
-         FeedForward        - position-wise MLP
+  Day 3  MultiHeadAttention - parallel heads + projection                   [DONE]
+         FeedForward        - position-wise MLP                             [DONE]
   Day 4  Block              - attn + ff with residuals & LayerNorm (pre-norm)
   Day 5  GPT                - token + positional embeddings, N blocks, lm_head
   Day 6  generate()         - sampling with temperature / top-k
@@ -50,3 +50,44 @@ class Head(nn.Module):
 
         v = self.value(x)   # (B, T, head_size)
         return wei @ v      # (B, T, head_size)
+
+
+class MultiHeadAttention(nn.Module):
+    """Several attention heads in parallel, concatenated and projected.
+
+    Each head works in a subspace of size n_embd // n_head, so the heads
+    together cost about the same as one full-width head, but can specialize.
+    """
+
+    def __init__(self, n_embd, n_head, block_size, dropout=0.0):
+        super().__init__()
+        assert n_embd % n_head == 0, "n_embd must be divisible by n_head"
+        head_size = n_embd // n_head
+        self.heads = nn.ModuleList(
+            [Head(n_embd, head_size, block_size, dropout) for _ in range(n_head)]
+        )
+        # mixes the concatenated heads back together; head_size*n_head == n_embd
+        self.proj = nn.Linear(n_embd, n_embd)
+        self.dropout = nn.Dropout(dropout)
+
+    def forward(self, x):
+        out = torch.cat([h(x) for h in self.heads], dim=-1)  # (B, T, n_embd)
+        return self.dropout(self.proj(out))                  # (B, T, n_embd)
+
+
+class FeedForward(nn.Module):
+    """Position-wise MLP: each token processed independently. The 4x hidden
+    expansion is the standard Transformer ratio -- this is where the nonlinear
+    per-token 'computation' happens, after attention does the 'communication'."""
+
+    def __init__(self, n_embd, dropout=0.0):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(n_embd, 4 * n_embd),
+            nn.ReLU(),
+            nn.Linear(4 * n_embd, n_embd),
+            nn.Dropout(dropout),
+        )
+
+    def forward(self, x):
+        return self.net(x)
